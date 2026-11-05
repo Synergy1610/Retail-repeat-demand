@@ -52,7 +52,7 @@ At most two `In Progress` tasks per developer at a time.
 
 | ID | Task | Owner | Role | Priority | Depends on | Status | Done when |
 | --- | --- | --- | --- | --- | --- | --- | --- |
-| T-001 | Build causal transaction feature matrix | Lavesh | Data / features | High | None | Not Started | `features.matrix` returns the frozen nine-column finite matrix in roster order and respects all time/customer filters. |
+| T-001 | Build causal transaction feature matrix | Lavesh | Data / features | High | None | Completed | `features.matrix` returns the frozen nine-column finite matrix in roster order and respects all time/customer filters. |
 | T-002 | Reproduce starter baseline and grouped validation | Veer | Model / validation | High | None | Completed | Baseline checker runs on all three public files and grouped training validation can be repeated without modifying supplied data. |
 | T-003 | Add feature edge-case tests | Lavesh | Data / testing | Medium | T-001 | Not Started | Standard-library tests cover duplicate rows, cancellations/returns, cutoff dates, unknown IDs, missing values, and empty histories. |
 | T-004 | Fit and compare probability/value heads | Veer | Model / training | High | T-001, T-002, T-003 | Not Started | Grouped validation compares the candidate with the starter; final JSON parameters are fit on training only and load without pickle/joblib. |
@@ -67,11 +67,11 @@ At most two `In Progress` tasks per developer at a time.
 | Metric | Count |
 | --- | --- |
 | Total tasks | 9 |
-| Not Started | 8 |
+| Not Started | 7 |
 | In Progress | 0 |
 | Blocked | 0 |
 | In Review | 0 |
-| Completed | 1 |
+| Completed | 2 |
 
 ## 6. Task detail
 
@@ -81,7 +81,7 @@ At most two `In Progress` tasks per developer at a time.
 - **Role:** Data / features
 - **Priority:** High
 - **Depends on:** None
-- **Status:** Not Started
+- **Status:** Completed
 - **Files:** `submission/features.py`
 
 **Goal**
