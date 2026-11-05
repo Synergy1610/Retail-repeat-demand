@@ -1,6 +1,6 @@
 # Tasks
 
-> **Planning basis:** 5.5 working hours from `docs/PROJECT_SPEC.md`; this is the 5–8 hour band, so the plan assigns three tasks per developer. Target a tested submission by 17:30 IST on 5 November 2026; hard cutoff 17:45 IST. Reserve work after the 13:15 IST twist for changed-data review and retesting.
+> **Planning basis:** 5.5 working hours from `docs/PROJECT_SPEC.md`; this is the 5–8 hour band, so the plan assigns three tasks per developer. Deliver a runnable candidate for the team's test by 14:15 IST on 5 November 2026. Use the test results and the 13:15 IST twist for focused refinement. Target a tested submission by 17:30 IST; hard cutoff 17:45 IST.
 
 ## 1. How to use this file
 
@@ -43,8 +43,8 @@ At most two `In Progress` tasks per developer at a time.
 
 | Milestone | Target | Must be true to move on |
 | --- | --- | --- |
-| M1 — Pre-twist candidate | Before 13:15 IST where the event schedule permits | Causal feature code and a baseline/model candidate exist; exact output contract passes local checks; make an early practice submission only after local validation. |
-| M2 — Twist response | After the 13:15 IST release | Inspect changed data, adapt features/model only when warranted, and re-run relevant tests and scoring. |
+| M1 — Runnable test candidate | By 14:15 IST | A working `decide` implementation passes a local smoke check and is handed to the team for its test; do not wait for model polish. |
+| M2 — Test feedback and twist refinement | Twist audit starts at 13:15 IST; apply candidate-driven changes after the 14:15 IST handoff | Run the team's test, inspect changed data, prioritize failures, make only justified updates, and re-run relevant checks. |
 | M3 — Submission ready | By 17:30 IST | Flat ZIP verified against file/runtime rules; smoke, training, and practice checks pass; eligible official source is submitted/nominated using the live portal controls. |
 | M4 — Final cutoff | 17:45 IST | No new final upload is assumed after cutoff; the retained selected source is evaluated according to the portal rules. |
 
@@ -57,9 +57,9 @@ At most two `In Progress` tasks per developer at a time.
 | T-003 | Add feature edge-case tests | Lavesh | Data / testing | Medium | T-001 | Not Started | Standard-library tests cover duplicate rows, cancellations/returns, cutoff dates, unknown IDs, missing values, and empty histories. |
 | T-004 | Fit and compare probability/value heads | Veer | Model / training | High | T-001, T-002, T-003 | Not Started | Grouped validation compares the candidate with the starter; final JSON parameters are fit on training only and load without pickle/joblib. |
 | T-005 | Implement evaluator inference entry point | Soorya | Integration | High | T-001, T-004 | Not Started | `solution.py` loads adjacent JSON, calls the feature matrix, and returns the exact valid `decide` contract for test observations. |
-| T-006 | Run full local checks and early practice upload | Soorya | Integration / release | High | T-002, T-005 | Not Started | Smoke, training, and practice local checks pass; one early practice ZIP is checked and its receipt/score is recorded. |
-| T-007 | Audit and test post-twist observations | Lavesh | Data / features | Medium | T-003 | Not Started | After the 13:15 IST release, changed input fields/availability are audited and feature tests pass on changed examples without leakage. |
-| T-008 | Evaluate and retune for post-twist conditions | Veer | Model / validation | High | T-004, T-007 | Not Started | Changed-condition training/validation is evaluated, any justified model update is saved as JSON, and all predictions remain contract-valid. |
+| T-006 | Deliver runnable candidate and run team test | Soorya | Integration / release | High | T-002, T-005 | Not Started | A runnable candidate is available by 14:15 IST, passes a local smoke check, and is run against the team's test with results recorded; then run full local checks and one practice upload if checks pass. |
+| T-007 | Audit twist data and triage feature-test feedback | Lavesh | Data / features | Medium | T-003 | Not Started | After 13:15 IST, changed inputs are audited in parallel with candidate preparation; after the 14:15 team test, feature findings are addressed and checked without leakage. |
+| T-008 | Evaluate and retune for post-twist conditions | Veer | Model / validation | High | T-004, T-006, T-007 | Not Started | Team-test and changed-condition results are evaluated, any justified model update is saved as JSON, and all predictions remain contract-valid. |
 | T-009 | Final integration, ZIP verification, and official nomination | Soorya | Integration / release | High | T-006, T-008 | Not Started | Exact flat ZIP passes the checker on smoke/training/practice and is submitted/nominated by 17:30 IST using the current portal's eligible C/automatic-selection controls. |
 
 ## 5. Progress
@@ -185,7 +185,7 @@ Connect the feature matrix and portable parameters to the evaluator's direct fun
 - [ ] Every customer receives exactly the two documented numeric predictions; `selected` has exactly the supplied number of unique eligible IDs.
 - [ ] Selection is ranked by predicted capped value with the documented deterministic tie-break; state is `{}`.
 
-### T-006 — Run full local checks and early practice upload
+### T-006 — Deliver runnable candidate and run team test
 
 - **Owner:** Soorya
 - **Role:** Integration / release
@@ -196,13 +196,14 @@ Connect the feature matrix and portable parameters to the evaluator's direct fun
 
 **Goal**
 
-Catch package/import/response failures early, before spending an official attempt.
+Give the team a functioning candidate by 14:15 IST so its own test can identify the highest-value fixes before the final submission window.
 
 **Acceptance criteria**
 
-- [ ] The local checker passes on smoke, training, and practice data; record all scores.
-- [ ] A candidate ZIP has only allowed files at its root, contains no data, and is below all size limits.
-- [ ] Make at most one early practice upload after local checks pass; record compatibility status/receipt and score. Do not make repeated practice tuning the main validation method.
+- [ ] A runnable `decide` candidate is available by 14:15 IST and passes the supplied smoke check before handoff.
+- [ ] Run the team's test on that candidate and record its results/failures for the refinement tasks; keep team test inputs out of the submission ZIP.
+- [ ] Run local checks on training and practice and, after local/team checks pass, make at most one early practice upload; record its receipt/score without repeatedly tuning to practice.
+- [ ] Candidate packaging, if used for the team test, keeps `solution.py` at the ZIP root and includes no datasets.
 
 ### T-007 — Audit and test post-twist observations
 
@@ -215,25 +216,26 @@ Catch package/import/response failures early, before spending an official attemp
 
 **Goal**
 
-Check whether the changed-condition packet alters the input interpretation or breaks feature generation.
+Audit the twist supplement as soon as it is released; then use the team's candidate-test feedback to identify feature defects before final model refinement.
 
 **Acceptance criteria**
 
 - [ ] Changed training/practice files are inspected without using hidden/private labels.
 - [ ] Existing observation contract remains respected; any incompatibility is reported before changing shared assumptions.
-- [ ] Feature tests and local checker smoke coverage pass on available changed examples.
+- [ ] Twist findings are reported while the first candidate is being prepared; feature changes based on the team's test are made after the 14:15 handoff.
+- [ ] Feature tests and local checker smoke coverage pass on available changed examples; actionable findings are handed to Veer and Soorya.
 
 ### T-008 — Evaluate and retune for post-twist conditions
 
 - **Owner:** Veer
 - **Role:** Model / validation
 - **Priority:** High
-- **Depends on:** T-004, T-007
+- **Depends on:** T-004, T-006, T-007
 - **Status:** Not Started
 
 **Goal**
 
-Use the released changed-condition examples to evaluate robustness and make only evidence-based model updates.
+Use the released changed-condition examples and the team's test results to evaluate robustness and make only evidence-based model updates.
 
 **Acceptance criteria**
 
