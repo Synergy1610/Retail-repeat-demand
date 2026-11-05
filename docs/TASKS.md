@@ -1,18 +1,14 @@
 # Tasks
 
-> **Status: not filled in yet.**
->
-> The Team Lead creates the task breakdown here after the specification, architecture, and API contract are agreed. This file is the single source of truth for who does what.
->
-> Only the Team Lead edits this file. Developers report status changes; they do not edit it, so two branches never conflict over the same document.
+> **Planning basis:** 5.5 working hours from `docs/PROJECT_SPEC.md`; this is the 5–8 hour band, so the plan assigns three tasks per developer. Target a tested submission by 17:30 IST on 5 November 2026; hard cutoff 17:45 IST. Reserve work after the 13:15 IST twist for changed-data review and retesting.
 
 ## 1. How to use this file
 
-- Task IDs are `T-001`, `T-002`, … and never change once created.
-- Branch names and commit messages use the task ID: `feature/T-003-login-ui`, `T-003: add login form UI`.
-- A task is small enough if one agent can finish and test it in a single work session. Split anything larger.
-- Every task has exactly one owner. The `Owner` column is both the team member and the assigned developer.
-- Dependencies are task IDs. A task with an unfinished dependency stays `Blocked`.
+- Task IDs are permanent and appear in implementation order.
+- Branch names and commit messages use the task ID (for example `feature/T-001-causal-features`, `T-001: build causal features`).
+- Every task has exactly one owner and a testable completion criterion.
+- Dependencies are task IDs. Start the first unblocked task assigned to you; do not edit another owner's files.
+- All tasks begin `Not Started`; report blockers and status changes to the Team Lead.
 
 ### Status values
 
@@ -24,55 +20,54 @@
 | `In Review` | Pushed to a branch and waiting for the Team Lead |
 | `Completed` | Reviewed, merged, and verified in `main` |
 
-**Limit work in progress:** at most two `In Progress` tasks per developer at a time.
+At most two `In Progress` tasks per developer at a time.
 
 ### Priorities
 
 | Priority | Meaning |
 | --- | --- |
-| `High` | On the critical path for the demo; nothing works without it |
-| `Medium` | Needed for a complete MVP, but the demo can survive briefly without it |
-| `Low` | Polish, only after the MVP is integrated |
+| `High` | Critical path for a valid, competitive submission |
+| `Medium` | Needed for changed-condition confidence or final polish |
+| `Low` | Optional work only after the MVP is integrated |
 
 ## 2. Team
 
 | Member | Role | Owns |
 | --- | --- | --- |
-| Soorya | Team Lead | Specification, architecture, API contract, task plan, review, integration, deployment, demo |
-| Veer | Developer (frontend / UI) | User interface, client-side state, API integration |
-| Lavesh | Developer (backend / data) | API endpoints, database, validation, server-side logic |
-| Fourth member | Research and testing (no agent) | Research, competitor analysis, test scenarios, bug reports, presentation |
+| Soorya | Team Lead / inference integration | Shared docs, `submission/solution.py`, packaging, integration, portal submission |
+| Veer | Developer / model training and validation | `tools/validate_baseline.py`, `tools/train_model.py`, `submission/starter_model.json` |
+| Lavesh | Developer / data cleaning and features | `submission/features.py`, `tests/test_features.py` |
+| Fourth member | Research/testing (no agent task owner) | May run the final checklist and report issues if available |
 
 ## 3. Milestones
 
 | Milestone | Target | Must be true to move on |
 | --- | --- | --- |
-| M1 — Foundation |  | Stack chosen, contract agreed, tasks assigned, repo cloned on all machines |
-| M2 — Skeleton |  | App builds and starts; frontend and backend can reach each other |
-| M3 — Core flow |  | The single most important user journey works end to end |
-| M4 — MVP complete |  | All High priority tasks are `Completed` |
-| M5 — Demo ready |  | Deployed, tested by the fourth member, presentation rehearsed |
+| M1 — Pre-twist candidate | Before 13:15 IST where the event schedule permits | Causal feature code and a baseline/model candidate exist; exact output contract passes local checks; make an early practice submission only after local validation. |
+| M2 — Twist response | After the 13:15 IST release | Inspect changed data, adapt features/model only when warranted, and re-run relevant tests and scoring. |
+| M3 — Submission ready | By 17:30 IST | Flat ZIP verified against file/runtime rules; smoke, training, and practice checks pass; eligible official source is submitted/nominated using the live portal controls. |
+| M4 — Final cutoff | 17:45 IST | No new final upload is assumed after cutoff; the retained selected source is evaluated according to the portal rules. |
 
 ## 4. Task board
 
 | ID | Task | Owner | Role | Priority | Depends on | Status | Done when |
 | --- | --- | --- | --- | --- | --- | --- | --- |
-|  |  |  |  |  |  |  |  |
-|  |  |  |  |  |  |  |  |
-
-<!-- Row format, for reference only — do not commit example tasks:
-
-| T-003 | Build the login form | Veer | Frontend | High | T-001 | Not Started | Form renders, submits, shows validation and API errors |
-| T-005 | Implement POST /auth/login | Lavesh | Backend | High | T-001 | Not Started | Endpoint matches the contract and returns 200/401 correctly |
-
--->
+| T-001 | Build causal transaction feature matrix | Lavesh | Data / features | High | None | Not Started | `features.matrix` returns the frozen nine-column finite matrix in roster order and respects all time/customer filters. |
+| T-002 | Reproduce starter baseline and grouped validation | Veer | Model / validation | High | None | Not Started | Baseline checker runs on all three public files and grouped training validation can be repeated without modifying supplied data. |
+| T-003 | Add feature edge-case tests | Lavesh | Data / testing | Medium | T-001 | Not Started | Standard-library tests cover duplicate rows, cancellations/returns, cutoff dates, unknown IDs, missing values, and empty histories. |
+| T-004 | Fit and compare probability/value heads | Veer | Model / training | High | T-001, T-002, T-003 | Not Started | Grouped validation compares the candidate with the starter; final JSON parameters are fit on training only and load without pickle/joblib. |
+| T-005 | Implement evaluator inference entry point | Soorya | Integration | High | T-001, T-004 | Not Started | `solution.py` loads adjacent JSON, calls the feature matrix, and returns the exact valid `decide` contract for test observations. |
+| T-006 | Run full local checks and early practice upload | Soorya | Integration / release | High | T-002, T-005 | Not Started | Smoke, training, and practice local checks pass; one early practice ZIP is checked and its receipt/score is recorded. |
+| T-007 | Audit and test post-twist observations | Lavesh | Data / features | Medium | T-003 | Not Started | After the 13:15 IST release, changed input fields/availability are audited and feature tests pass on changed examples without leakage. |
+| T-008 | Evaluate and retune for post-twist conditions | Veer | Model / validation | High | T-004, T-007 | Not Started | Changed-condition training/validation is evaluated, any justified model update is saved as JSON, and all predictions remain contract-valid. |
+| T-009 | Final integration, ZIP verification, and official nomination | Soorya | Integration / release | High | T-006, T-008 | Not Started | Exact flat ZIP passes the checker on smoke/training/practice and is submitted/nominated by 17:30 IST using the current portal's eligible C/automatic-selection controls. |
 
 ## 5. Progress
 
 | Metric | Count |
 | --- | --- |
-| Total tasks | 0 |
-| Not Started | 0 |
+| Total tasks | 9 |
+| Not Started | 9 |
 | In Progress | 0 |
 | Blocked | 0 |
 | In Review | 0 |
@@ -80,35 +75,193 @@
 
 ## 6. Task detail
 
-Use this block for any task that needs more than one line of description.
+### T-001 — Build causal transaction feature matrix
 
-```markdown
-### T-000 — Task title
-
-- **Owner:**
-- **Role:**
-- **Priority:**
-- **Depends on:**
-- **Status:**
+- **Owner:** Lavesh
+- **Role:** Data / features
+- **Priority:** High
+- **Depends on:** None
+- **Status:** Not Started
+- **Files:** `submission/features.py`
 
 **Goal**
 
+Build the frozen feature interface in `docs/ARCHITECTURE.md` from each raw observation.
+
 **Scope**
 
-- 
+- Preserve the eligible roster order and join only on supplied customer IDs.
+- Use history from `history_start` inclusive to `observed_until` exclusive; use `snapshot` for age calculations.
+- De-duplicate exact source rows using the eight original fields, excluding `source_row`.
+- Distinguish valid positive purchase lines from returns/cancellations; do not subtract historical returns from positive purchase value.
+- Expose `FEATURE_NAMES` and `matrix(observation)` returning a finite `(n_customers, 9)` NumPy matrix in the agreed order.
 
-**Out of scope**
-
-- 
+**Out of scope:** model fitting, reading labels/targets, changing the inference contract, or modifying supplied packet files.
 
 **Acceptance criteria**
 
-- [ ] 
-- [ ] 
+- [ ] Feature order and shape match the architecture document.
+- [ ] No row at/after `observed_until` or unknown customer affects a customer's features.
+- [ ] Output remains finite for empty histories and missing source fields.
 
-**Notes for the owner**
-```
+### T-002 — Reproduce starter baseline and grouped validation
+
+- **Owner:** Veer
+- **Role:** Model / validation
+- **Priority:** High
+- **Depends on:** None
+- **Status:** Not Started
+- **Files:** `tools/validate_baseline.py`
+
+**Goal**
+
+Establish a reproducible reference and leakage-aware comparison process before changing the model.
+
+**Scope**
+
+- Run the supplied local checker against the supplied starter on smoke, training, and practice files.
+- Record component scores and compare with `Initial-Data/baseline_results.json`.
+- Create or document grouped folds using the public source/world grouping metadata; do not random-split related examples or tune repeatedly on practice.
+- Keep all supplied data and starter files unchanged.
+
+**Acceptance criteria**
+
+- [ ] The commands, scores, and discrepancies from the published baseline are recorded in the task report.
+- [ ] The validation procedure is repeatable and groups related source examples together.
+
+### T-003 — Add feature edge-case tests
+
+- **Owner:** Lavesh
+- **Role:** Data / testing
+- **Priority:** Medium
+- **Depends on:** T-001
+- **Status:** Not Started
+- **Files:** `tests/test_features.py`
+
+**Goal**
+
+Prevent cleaning and causal-window regressions before model fitting.
+
+**Acceptance criteria**
+
+- [ ] Standard-library tests cover exact duplicate handling, cancellation/return signals, exclusive `observed_until`, unknown customer IDs, missing fields, and customers with no usable history.
+- [ ] Feature outputs preserve every supplied customer and are finite with the exact agreed shape.
+
+### T-004 — Fit and compare probability/value heads
+
+- **Owner:** Veer
+- **Role:** Model / training
+- **Priority:** High
+- **Depends on:** T-001, T-002, T-003
+- **Files:** `tools/train_model.py`, `submission/starter_model.json`
+- **Status:** Not Started
+
+**Goal**
+
+Fit the agreed logistic repeat head and ridge capped-value head, and export portable JSON parameters.
+
+**Acceptance criteria**
+
+- [ ] Fit only on public training examples; evaluate hyperparameters with grouped validation and compare against the starter score.
+- [ ] Train final parameters on the allowed training partition and store feature scaling, intercepts, and coefficients in the agreed JSON shape.
+- [ ] Candidate predictions are finite and bounded; do not include customer IDs as features or use pickle/joblib serialization.
+
+### T-005 — Implement evaluator inference entry point
+
+- **Owner:** Soorya
+- **Role:** Integration
+- **Priority:** High
+- **Depends on:** T-001, T-004
+- **Files:** `submission/solution.py`
+- **Status:** Not Started
+
+**Goal**
+
+Connect the feature matrix and portable parameters to the evaluator's direct function call.
+
+**Acceptance criteria**
+
+- [ ] `decide(observation, state)` loads its model file relative to `__file__` and returns only `action` and `state`.
+- [ ] Every customer receives exactly the two documented numeric predictions; `selected` has exactly the supplied number of unique eligible IDs.
+- [ ] Selection is ranked by predicted capped value with the documented deterministic tie-break; state is `{}`.
+
+### T-006 — Run full local checks and early practice upload
+
+- **Owner:** Soorya
+- **Role:** Integration / release
+- **Priority:** High
+- **Depends on:** T-002, T-005
+- **Files:** `tools/package_submission.py`
+- **Status:** Not Started
+
+**Goal**
+
+Catch package/import/response failures early, before spending an official attempt.
+
+**Acceptance criteria**
+
+- [ ] The local checker passes on smoke, training, and practice data; record all scores.
+- [ ] A candidate ZIP has only allowed files at its root, contains no data, and is below all size limits.
+- [ ] Make at most one early practice upload after local checks pass; record compatibility status/receipt and score. Do not make repeated practice tuning the main validation method.
+
+### T-007 — Audit and test post-twist observations
+
+- **Owner:** Lavesh
+- **Role:** Data / features
+- **Priority:** Medium
+- **Depends on:** T-003
+- **Status:** Not Started
+- **Start condition:** Twist supplement is released at 13:15 IST.
+
+**Goal**
+
+Check whether the changed-condition packet alters the input interpretation or breaks feature generation.
+
+**Acceptance criteria**
+
+- [ ] Changed training/practice files are inspected without using hidden/private labels.
+- [ ] Existing observation contract remains respected; any incompatibility is reported before changing shared assumptions.
+- [ ] Feature tests and local checker smoke coverage pass on available changed examples.
+
+### T-008 — Evaluate and retune for post-twist conditions
+
+- **Owner:** Veer
+- **Role:** Model / validation
+- **Priority:** High
+- **Depends on:** T-004, T-007
+- **Status:** Not Started
+
+**Goal**
+
+Use the released changed-condition examples to evaluate robustness and make only evidence-based model updates.
+
+**Acceptance criteria**
+
+- [ ] Compare unchanged and changed-condition metrics using the permitted train/practice split discipline.
+- [ ] If a model update is justified, refit and export the same JSON parameter schema; otherwise retain the prior candidate and document why.
+- [ ] The updated or retained candidate passes output bounds and fixed-budget selection checks.
+
+### T-009 — Final integration, ZIP verification, and official nomination
+
+- **Owner:** Soorya
+- **Role:** Integration / release
+- **Priority:** High
+- **Depends on:** T-006, T-008
+- **Files:** `submission/`, `tools/package_submission.py`
+- **Status:** Not Started
+
+**Goal**
+
+Freeze and submit the best eligible source with time for a final smoke check.
+
+**Acceptance criteria**
+
+- [ ] Re-run the local checker on smoke, training, and practice using the exact final source.
+- [ ] Verify ZIP root layout, allowed extensions, file counts/sizes, no datasets, and relative artifact loading.
+- [ ] Submit/nominate an eligible official C source using the live portal controls by 17:30 IST; T nomination is currently shown closed and retained C source is evaluated in T without another upload.
+- [ ] Record receipt/compatibility status, selected automatic/manual nomination mode, remaining attempts, and any blocker before the 17:45 IST cutoff.
 
 ## 7. Handoff notes
 
-<!-- The Team Lead records integration notes, contract changes, and environment requirements discovered during the event. Keep it short and dated. -->
+- 2026-11-05: No HTTP endpoints, database, environment variables, or required UI. The callable contract is in `docs/API_CONTRACT.md`; the nine-column internal feature schema and JSON model schema are in `docs/ARCHITECTURE.md`.
+- Do not edit `Initial-Data/` or `Submission-Format/`; treat both as supplied reference packets.

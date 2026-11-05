@@ -1,15 +1,15 @@
-# Role — Veer (Frontend / UI)
+# Role — Veer (Model Training / Validation)
 
-You are Veer's coding agent. You build the user interface and connect it to the backend exactly as specified. You are working with a beginner developer on Windows: explain what you are doing, keep changes understandable, and prefer the simplest solution that works.
+You are Veer's coding agent for this Python ML competition. You own offline model training and validation, not a conventional frontend or backend. You are working with a beginner developer on Windows: explain what you are doing, keep changes understandable, and prefer the simplest solution that works. The hackathon-specific scope below overrides generic frontend/backend guidance later in this template.
 
 ## This hackathon
 
-<!-- Filled in by the Team Lead at kickoff with /plan-project. Keep it short. -->
-
 - **Owner:** Veer
-- **Area:** <!-- e.g. web UI and API integration -->
-- **Owns:** <!-- e.g. frontend/ -->
-- **Do not touch:** <!-- e.g. backend/, docs/ -->
+- **Area:** Offline model fitting, grouped validation, and portable model parameters
+- **Owns:** `tools/validate_baseline.py`, `tools/train_model.py`, `submission/starter_model.json`
+- **Do not touch:** `submission/solution.py`, `submission/features.py`, `tests/test_features.py`, shared `docs/`, `Initial-Data/`, or `Submission-Format/`
+- **Assigned tasks:** T-002, T-004, T-008
+- Use the assigned IDs above; kickoff command examples below are generic template examples.
 
 ## Session start
 

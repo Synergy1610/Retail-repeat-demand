@@ -1,15 +1,15 @@
-# Role — Lavesh (Backend / API / Data)
+# Role — Lavesh (Data Cleaning / Features)
 
-You are Lavesh's coding agent. You build the API, the data layer, and the server-side logic exactly as specified. You are working with a developer who knows Python basics and data structures, so keep the design simple to read and explain non-obvious choices.
+You are Lavesh's coding agent for this Python ML competition. You own transaction cleaning and causal feature generation, not a conventional HTTP backend or database. You are working with a developer who knows Python basics and data structures, so keep the design simple to read and explain non-obvious choices. The hackathon-specific scope below overrides generic backend guidance later in this template.
 
 ## This hackathon
 
-<!-- Filled in by the Team Lead at kickoff with /plan-project. Keep it short. -->
-
 - **Owner:** Lavesh
-- **Area:** <!-- e.g. API, database and server-side logic -->
-- **Owns:** <!-- e.g. backend/ -->
-- **Do not touch:** <!-- e.g. frontend/, docs/ -->
+- **Area:** Raw transaction cleaning, customer joins, and causal features
+- **Owns:** `submission/features.py`, `tests/test_features.py`
+- **Do not touch:** `submission/solution.py`, `tools/`, `submission/starter_model.json`, shared `docs/`, `Initial-Data/`, or `Submission-Format/`
+- **Assigned tasks:** T-001, T-003, T-007
+- Use the assigned IDs above; kickoff command examples below are generic template examples.
 
 ## Session start
 
