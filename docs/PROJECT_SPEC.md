@@ -84,7 +84,7 @@ Batch scores are averaged weighted by customer count. Invalid/missing prediction
 
 ## Hackathon constraints and submission process
 
-- Event date: **5 November 2026**. Target uploading a tested submission by **17:30 IST**; the hard final cutoff is **17:45 IST**. The team is budgeting about 5.5 hours for a finished product.
+- Event date: **5 November 2026**. Deliver at least one runnable candidate for the team's test by **14:15 IST**; use test feedback to guide subsequent refinement. Target uploading a tested submission by **17:30 IST**; the hard final cutoff is **17:45 IST**. The team is budgeting about 5.5 hours for a finished product.
 - The packet states four official and four practice uploads per stage, with only one evaluation outstanding at a time. A confirmed compatibility failure releases the attempt while submissions are open; manual withdrawal without such a failure keeps the attempt used.
 - The portal view shared during planning showed Initial (C) nomination open, Post-twist (T) nomination closed, and no eligible receipt yet. A retained C source is evaluated in T without another upload. Nomination may use an eligible official/retained validation receipt or automatic best eligible validation.
 - The packet's `EVENT_RULES.md` lists stage weights of 20% initial validation, 30% post-twist validation, and 50% private final testing, but also labels its schedule/cohorts as a rehearsal. Follow the live portal for any stage-level scoring rules that differ.
@@ -95,4 +95,5 @@ Batch scores are averaged weighted by customer count. Invalid/missing prediction
 - The source passes the supplied local checker on smoke, training, and practice data.
 - The response schema, customer coverage, value/probability ranges, and exact shortlist budget are valid for every checked case.
 - Model choices are supported by leakage-aware validation and comparison against the starter; public practice is not repeatedly tuned as if it were a fresh holdout.
+- A runnable candidate is available by 14:15 IST and the team's test is run on it before final refinements.
 - A tested submission ZIP is ready by 17:30 IST on 5 November, leaving a 15-minute margin before cutoff.

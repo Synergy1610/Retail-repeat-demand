@@ -122,7 +122,7 @@ Not required. There is no application server, user account, private API, or exte
 | Leakage from records at/after `observed_until` or from random splits across related examples | Inflated local validation and poor hidden-cohort performance | Enforce the cutoff in feature code and use grouped validation based on the supplied source/world grouping metadata. |
 | Seven-day unavailable tail and messy duplicate/return/cancellation rows | Incorrect recency, frequency, or value features | Treat the tail as unknown; test exact deduplication and purchase predicates; preserve returns/cancellations only as historical evidence. |
 | Small public sample and repeated practice tuning | Overfit model selection | Keep an untouched grouped training holdout and limit practice comparisons; compare against the starter baseline. |
-| Heavy-tailed capped value and narrow time budget | Unstable value predictions or incomplete integration | Bound predictions, evaluate the published score and capture metric, prioritize working baseline and integration, and reserve post-twist retesting time. |
+| Heavy-tailed capped value and narrow time budget | Unstable value predictions or incomplete integration | Deliver a runnable candidate by 14:15 IST for the team's test; use its results to prioritize fixes, bound predictions, compare against the starter, and reserve time for post-twist retesting. |
 | JSON artifact/path/ZIP contract errors or runtime overrun | Compatibility failure or lost attempt | Read artifacts relative to `__file__`; test the exact flat ZIP; run the supplied checker on smoke, training, and practice before upload. |
 
 ## 9. Environment variables
