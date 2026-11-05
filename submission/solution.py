@@ -130,10 +130,11 @@ def decide(observation, state):
     probabilities = 1.0 / (1.0 + np.exp(-np.clip(logits, -700.0, 700.0)))
 
     value = model["value"]
-    normalized_values = np.clip(
-        value["intercept"] + scaled @ value["coefficients"], 0.0, 1.0
+    conditional_log_values = value["intercept"] + scaled @ value["coefficients"]
+    conditional_values = np.expm1(
+        np.clip(conditional_log_values, 0.0, np.log1p(_VALUE_CAP))
     )
-    values = normalized_values * _VALUE_CAP
+    values = probabilities * conditional_values
     if (
         not np.isfinite(probabilities).all()
         or not np.isfinite(values).all()
