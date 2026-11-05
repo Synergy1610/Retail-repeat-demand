@@ -79,7 +79,7 @@ The ZIP is assembled from the contents of `submission/`, so its root contains `s
 1. Offline fitting reads only the public training partition. Validation folds keep documented source/world groups together; the practice set is used as a limited final public comparison, not repeatedly tuned.
 2. The evaluator passes the observation roster, dates, budget, and raw transactions to `decide`; no labels are passed to inference.
 3. Feature generation joins only on supplied customer IDs, filters rows to the available history before `observed_until`, and distinguishes positive purchases from returns/cancellations. Exact repeated source rows are de-duplicated for aggregates using the eight original fields, excluding `source_row`.
-4. The model predicts repeat probability and unconditional capped purchase value for each roster customer. Predictions are bounded to the contract ranges.
+4. The model predicts repeat probability and unconditional capped purchase value for each roster customer. Its value estimate is formed from repeat probability and a conditional amount estimate; predictions are bounded to the contract ranges.
 5. The selector ranks predicted capped value and returns exactly the supplied number of distinct eligible customer IDs.
 
 ### Frozen feature and parameter interface
@@ -100,7 +100,7 @@ The ZIP is assembled from the contents of `submission/`, so its root contains `s
 
 The baseline log-transforms zero-based columns 1–4 with `log1p(max(0, x))`; training-fitted means and scales are stored in the JSON model and reused at inference. Invalid/missing dates do not contribute to time-based features. Return/cancellation lines may contribute to `return_ratio` but never to positive purchase totals.
 
-The JSON model contains `feature_names`, `mean` (nine numbers), `scale` (nine positive numbers), `repeat` (`intercept` plus nine `coefficients`), and `value` (`intercept` plus nine `coefficients`). `repeat` is fit as logistic regression; `value` is ridge regression on capped target value normalized by 2000. Inference applies the sigmoid and linear value head, multiplies the normalized value by 2000, clips to the contract ranges, and selects descending predicted value with customer ID ascending as a deterministic tie-break. Both heads are exported as plain JSON numeric parameters, never as a serialized estimator.
+The JSON model contains `feature_names`, `mean` (nine numbers), `scale` (nine positive numbers), `repeat` (`intercept` plus nine `coefficients`), and `value` (`intercept` plus nine `coefficients`). `repeat` is fit as logistic regression. `value` is ridge regression on `log1p` capped purchase amounts among repeat buyers, with larger positive amounts receiving square-root target weights. Inference applies the sigmoid, converts the value head with clipped `expm1`, and multiplies by repeat probability to estimate unconditional capped value. It selects descending predicted value with customer ID ascending as a deterministic tie-break. Both heads are exported as plain JSON numeric parameters, never as a serialized estimator.
 
 ## 6. Authentication and authorization
 
@@ -111,7 +111,7 @@ Not required. There is no application server, user account, private API, or exte
 | Decision | Alternatives considered | Why we chose it | Date |
 | --- | --- | --- | --- |
 | Single offline Python submission; no web app or service | Conventional frontend/backend/API deployment | The evaluator invokes a Python function directly; extra infrastructure cannot improve the task score and risks the deadline. | 2026-11-05 |
-| Use compact linear model heads: scikit-learn logistic regression for repeat and ridge regression for capped value; export transforms/coefficients to JSON and compute predictions with NumPy | Pickle/joblib estimators, large tree ensembles, or fitting during inference | Approved libraries support offline fitting, while JSON parameters are permitted, portable, small, and do not require model deserialization in the isolated runner. Compare against the supplied ridge baseline with grouped validation before choosing final parameters. | 2026-11-05 |
+| Use compact linear model heads: scikit-learn logistic regression for repeat and ridge regression for conditional log amount; combine their outputs for expected capped value and export numeric JSON parameters | Pickle/joblib estimators, large tree ensembles, or fitting during inference | Approved libraries support offline fitting, while JSON parameters are permitted, portable, small, and do not require model deserialization in the isolated runner. The two-part head modestly improves grouped selection capture and value error over the direct value ridge baseline. | 2026-11-05 |
 | Keep training and packaging tools outside `submission/`; keep submission files flat inside the ZIP | Bundle datasets/notebooks or zip an enclosing folder | Meets the no-dataset/no-subfolder constraints and keeps the inference artifact small. | 2026-11-05 |
 | No database, environment variables, authentication, or external APIs | Local persistence and hosted services | Observations and parameters are supplied directly; none of these services are required. | 2026-11-05 |
 

@@ -33,7 +33,7 @@ TRAINING_PATH = PACKET / "training.json.gz"
 GROUPS_PATH = PACKET / "dataset_info.json"
 DEFAULT_OUTPUT = ROOT / "submission" / "starter_model.json"
 LOG_CANDIDATES = (0.01, 0.1, 1.0, 10.0)
-RIDGE_CANDIDATES = (0.1, 1.0, 10.0, 100.0)
+RIDGE_CANDIDATES = (0.01, 0.1, 1.0, 10.0, 100.0)
 VALUE_CAP = 2000.0
 
 
@@ -135,6 +135,26 @@ def _scale(features, mean, scale):
     return (features - mean) / scale
 
 
+def _fit_conditional_value_head(features, repeat_targets, value_targets, alpha):
+    """Fit log capped amount among repeat buyers, emphasizing larger amounts."""
+    positive = repeat_targets > 0.5
+    if not np.any(positive):
+        raise ValueError("Conditional value training requires at least one repeat buyer")
+    positive_values = value_targets[positive]
+    sample_weight = np.sqrt(np.maximum(positive_values, 1e-6))
+    sample_weight /= sample_weight.mean()
+    return Ridge(alpha=alpha).fit(
+        features[positive],
+        np.log1p(positive_values * VALUE_CAP),
+        sample_weight=sample_weight,
+    )
+
+
+def _conditional_amount_from_log(log_amount):
+    """Convert a fitted log1p amount to a bounded normalized capped amount."""
+    return np.expm1(np.clip(log_amount, 0.0, math.log1p(VALUE_CAP))) / VALUE_CAP
+
+
 def _earned_components(metrics):
     return {
         "probability": 40.0 * (1.0 - metrics["brier"]),
@@ -210,14 +230,15 @@ def _fit_candidate_models(training_cases, validation_cases):
             :, positive_column
         ]
 
-    values_by_alpha = {}
+    conditional_values_by_alpha = {}
     for alpha in RIDGE_CANDIDATES:
-        regressor = Ridge(alpha=alpha)
-        regressor.fit(x_train_scaled, y_value)
-        values_by_alpha[alpha] = np.clip(
-            regressor.predict(x_validation_scaled), 0.0, 1.0
+        regressor = _fit_conditional_value_head(
+            x_train_scaled, y_repeat, y_value, alpha
         )
-    return probabilities_by_c, values_by_alpha
+        conditional_values_by_alpha[alpha] = _conditional_amount_from_log(
+            regressor.predict(x_validation_scaled)
+        )
+    return probabilities_by_c, conditional_values_by_alpha
 
 
 def _fit_starter_fold(raw_training_cases, raw_validation_cases, baseline_features):
@@ -274,7 +295,7 @@ def _cross_validate(raw_cases, prepared_cases, groups_by_index, baseline_feature
         prepared_training = [prepared_cases[index] for index in train_indices]
         prepared_validation = [prepared_cases[index] for index in validation_indices]
 
-        probabilities_by_c, values_by_alpha = _fit_candidate_models(
+        probabilities_by_c, conditional_values_by_alpha = _fit_candidate_models(
             prepared_training, prepared_validation
         )
         validation_cases = [item for item in prepared_validation]
@@ -297,7 +318,8 @@ def _cross_validate(raw_cases, prepared_cases, groups_by_index, baseline_feature
                 metrics = _score_predictions(
                     validation_cases,
                     probabilities_by_c[c_value],
-                    values_by_alpha[alpha],
+                    probabilities_by_c[c_value]
+                    * conditional_values_by_alpha[alpha],
                 )
                 grid_folds[(c_value, alpha)].append(
                     {
@@ -356,8 +378,9 @@ def _fit_final_model(prepared_cases, repeat_c, value_alpha):
     classifier.fit(x_scaled, y_repeat)
     positive_column = list(classifier.classes_).index(1)
 
-    regressor = Ridge(alpha=value_alpha)
-    regressor.fit(x_scaled, y_value)
+    regressor = _fit_conditional_value_head(
+        x_scaled, y_repeat, y_value, value_alpha
+    )
 
     model = {
         "feature_names": list(submission_features.FEATURE_NAMES),
@@ -417,13 +440,13 @@ def _check_exported_predictions(model, prepared_cases):
         # Clipping logits is numerically stable and equivalent to sigmoid at
         # probabilities indistinguishable from zero or one in float64.
         probabilities = 1.0 / (1.0 + np.exp(-np.clip(logits, -700.0, 700.0)))
-        normalized_values = np.clip(
-            float(value["intercept"])
-            + x_scaled @ np.asarray(value["coefficients"]),
-            0.0,
-            1.0,
+        conditional_log_values = float(value["intercept"]) + x_scaled @ np.asarray(
+            value["coefficients"]
         )
-        values = normalized_values * VALUE_CAP
+        conditional_values = np.expm1(
+            np.clip(conditional_log_values, 0.0, math.log1p(VALUE_CAP))
+        )
+        values = probabilities * conditional_values
         if (
             not np.isfinite(probabilities).all()
             or not np.isfinite(values).all()
