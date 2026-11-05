@@ -57,7 +57,7 @@ At most two `In Progress` tasks per developer at a time.
 | T-003 | Add feature edge-case tests | Lavesh | Data / testing | Medium | T-001 | Completed | Standard-library tests cover duplicate rows, cancellations/returns, cutoff dates, unknown IDs, missing values, and empty histories. |
 | T-004 | Fit and compare probability/value heads | Veer | Model / training | High | T-001, T-002, T-003 | Completed | Grouped validation compares the candidate with the starter; final JSON parameters are fit on training only and load without pickle/joblib. |
 | T-005 | Implement evaluator inference entry point | Soorya | Integration | High | T-001, T-004 | Completed | `solution.py` loads adjacent JSON, calls the feature matrix, and returns the exact valid `decide` contract for test observations. |
-| T-006 | Deliver runnable candidate and run team test | Soorya | Integration / release | High | T-002, T-005 | Not Started | A runnable candidate is available by 14:15 IST, passes a local smoke check, and is run against the team's test with results recorded; then run full local checks and one practice upload if checks pass. |
+| T-006 | Deliver runnable candidate and run team test | Soorya | Integration / release | High | T-002, T-005 | In Progress | A runnable candidate is available by 14:15 IST, passes a local smoke check, and is run against the team's test with results recorded; then run full local checks and one practice upload if checks pass. |
 | T-007 | Audit twist data and triage feature-test feedback | Lavesh | Data / features | Medium | T-003 | Not Started | After 13:15 IST, changed inputs are audited in parallel with candidate preparation; after the 14:15 team test, feature findings are addressed and checked without leakage. |
 | T-008 | Evaluate and retune for post-twist conditions | Veer | Model / validation | High | T-004, T-006, T-007 | Not Started | Team-test and changed-condition results are evaluated, any justified model update is saved as JSON, and all predictions remain contract-valid. |
 | T-009 | Final integration, ZIP verification, and official nomination | Soorya | Integration / release | High | T-006, T-008 | Not Started | Exact flat ZIP passes the checker on smoke/training/practice and is submitted/nominated by 17:30 IST using the current portal's eligible C/automatic-selection controls. |
@@ -67,8 +67,8 @@ At most two `In Progress` tasks per developer at a time.
 | Metric | Count |
 | --- | --- |
 | Total tasks | 9 |
-| Not Started | 4 |
-| In Progress | 0 |
+| Not Started | 3 |
+| In Progress | 1 |
 | Blocked | 0 |
 | In Review | 0 |
 | Completed | 5 |
@@ -192,7 +192,7 @@ Connect the feature matrix and portable parameters to the evaluator's direct fun
 - **Priority:** High
 - **Depends on:** T-002, T-005
 - **Files:** `tools/package_submission.py`
-- **Status:** Not Started
+- **Status:** In Progress
 
 **Goal**
 
