@@ -1,0 +1,21 @@
+Dataset attribution
+===================
+
+The models in this repository were trained on data derived from the UCI
+Machine Learning Repository's Online Retail II dataset.
+
+    Dataset:  Online Retail II
+    Creator:  Daqing Chen
+    Source:   https://archive.ics.uci.edu/dataset/502/online+retail+ii
+    Licence:  Creative Commons Attribution 4.0 International (CC BY 4.0)
+              https://creativecommons.org/licenses/by/4.0/
+
+The dataset itself, the organiser's processed hackathon packet, and the
+released operating excerpts are not included in this repository. They remain
+subject to their own terms. The MIT licence in LICENSE applies only to the
+source code and fitted model parameters in this repository, not to the
+dataset.
+
+No endorsement by the dataset creator, UCI, or the hackathon organisers is
+implied. The data was selected and transformed for the hackathon exercise;
+those transformations are not part of the original dataset.

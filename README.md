@@ -1,219 +1,226 @@
-# Hackathon Agent Framework
+# Repeat Demand & Customer Value
 
-A reusable foundation for running a hackathon team where each developer works with an independent OpenCode agent on a separate machine, collaborating through GitHub and shared documentation.
+**Predict who will buy again, how much they will spend, and who to prioritise.**
 
-**This is not an application repository.** It contains no product code, no chosen technology stack, and no problem statement. Those are created per hackathon from this template.
+[![tests](https://github.com/Synergy1610/hackmatrix-team99/actions/workflows/tests.yml/badge.svg?branch=main)](https://github.com/Synergy1610/hackmatrix-team99/actions/workflows/tests.yml)
+[![Python](https://img.shields.io/badge/python-3.11%2B-blue)](https://www.python.org/)
+[![License: MIT](https://img.shields.io/badge/license-MIT-green)](LICENSE)
 
-## Why three independent agents
+Built in six hours for the Applied ML track of a KSIT hackathon in November
+2026. The team's submission was **not shortlisted for final evaluation**. This
+repository preserves the two model variants that came out of the work:
 
-Each OpenCode agent runs locally on its own machine. They do not share memory, conversation history, or local files. That isolation is useful — every developer gets full context and full speed — but it means coordination must be explicit.
+- **V2.1 pre-twist** — the team's primary pre-twist candidate;
+- **V2.1 adapted** — the same fitted weights, with an input adapter for the
+  post-twist event feed.
 
-This framework makes GitHub the coordination system:
+The interesting part is not a leaderboard score. It is a compact, auditable
+model, a leakage-aware validation setup, and an honest account of what could
+and could not be measured after the operating conditions changed.
 
-- `AGENTS.md` gives every agent the same ground rules.
-- `docs/` holds the single agreed version of the problem, architecture, contracts, and tasks.
-- `roles/` tells each agent who it is and what it may touch.
-- `workflows/` defines how work moves from a branch to `main`.
+---
 
-The agents never talk to each other. The Team Lead is the message bus.
+## The problem
 
-## Team
+A small online retailer can prioritise only a fraction of its customers. Using
+a messy transaction history, estimate for each eligible customer:
 
-| Member | Machine | Agent role | Responsibilities |
-| --- | --- | --- | --- |
-| Soorya | Omarchy Linux | Team Lead | Specification, architecture, contracts, task allocation, review, integration, deployment |
-| Veer | Windows | Developer | Frontend / UI implementation and API integration |
-| Lavesh | Linux | Developer | Backend / API and database implementation |
-| Fourth member | Any | Human (no agent setup) | Research, competitor analysis, testing, bug reports, presentation |
+1. the probability of a qualifying purchase in the next 30 days;
+2. the expected purchase value, capped at £2,000.
 
-Role documents are named after the people because they are used by the same four-person team across hackathons. If the team changes, create or rename a role document and update the two references in `.opencode/commands/`.
+Then select exactly `max(1, floor(n / 5))` customers — 20% of the roster,
+rounded down. The data comes from the UCI Online Retail II workbook and
+includes duplicates, cancellations, returns, missing descriptions, and
+nonpositive prices.
+
+This is offline predictive ranking, not causal uplift. Selecting a customer
+does not cause a purchase.
+
+Read [docs/PROBLEM.md](docs/PROBLEM.md) for the full task, target definitions,
+and scoring formulas.
+
+## The models
+
+| | V2.1 pre-twist | V2.1 adapted |
+| --- | --- | --- |
+| Input | Legacy `transactions.rows` | Migrated `raw_feed` |
+| Fitted weights | Forest V2.1 | **Byte-identical** to pre-twist |
+| Extra code | — | `feed_adapter.py` |
+| Understands revisions/retries | No | Yes |
+| Understands source units/clocks | No | Yes |
+| Post-twist score | Not measured | Not measured |
+
+Both models use 26 causal customer-history features and two 64-tree random
+forests. The adapted variant does not retrain: it reconstructs the original
+transaction view from the new feed, then runs the same features and weights.
+That keeps the change auditable and avoids inventing labels that were never
+released.
+
+- [Pre-twist model card](models/v2.1-pre-twist/README.md)
+- [Adapted model card](models/v2.1-adapted/README.md)
+
+## Results
+
+All numbers below use the **initial-stage** 100-point formula. They are
+historical development and practice measurements, not private final-test
+results.
+
+| Evaluation | V2.1 pre-twist | V2.1 adapted |
+| --- | ---: | ---: |
+| Grouped development (5 folds, 2,191 customers) | 82.553 | 82.553 |
+| November 2010 holdout (713 customers) | 76.274 | 76.274 |
+| Public practice (51 cases, 1,940 customers) | **80.908** | **80.908** |
+| Released twist records parsed | — | 8 / 8 |
+| Labelled post-twist score | — | — |
+
+The pre-twist model ignores `raw_feed`. The adapted model parses it and returns
+a valid action, but the released excerpts have no targets. Compatibility is not
+accuracy. See [docs/EVALUATION.md](docs/EVALUATION.md) for component scores,
+baselines, and caveats.
+
+## How it works
+
+```text
+raw observation
+      │
+      ├── pre-twist ──────────────► transactions.rows
+      │                                   │
+      └── adapted ──► feed_adapter ──► normalised rows
+                          │
+                          ▼
+              26 causal history features
+                          │
+              ┌───────────┴───────────┐
+              ▼                       ▼
+      repeat-probability        capped-value
+           forest                  forest
+              │                       │
+              └───────────┬───────────┘
+                          ▼
+             rank by value, take budget
+```
+
+Key choices:
+
+- **No customer-ID feature.** IDs are join keys, not signals.
+- **Customer-disjoint validation.** Entire snapshot/customer shards are held
+  out; a random row split would leak repeat customers.
+- **Explicit observation gap.** The seven days between `observed_until` and
+  `snapshot` are unknown demand, not zero purchases.
+- **Portable JSON trees.** No pickle, no scikit-learn at inference time; only
+  NumPy.
+- **No gap imputation.** The adapter reports unknown coverage but never fills
+  it with fake transactions.
+- **Same weights after the twist.** The adaptation changes plumbing, not the
+  learned model.
+
+The 26 features cover recency, frequency, spend windows, invoice-size
+distribution, return ratio, cadence, tenure, product breadth, and the
+observation gap. See [docs/METHOD.md](docs/METHOD.md) for the full table and
+training protocol.
 
 ## Repository layout
 
 ```text
 .
-├── AGENTS.md                          # Rules loaded automatically in every session
-├── README.md                          # This file
-├── .gitattributes                     # Line-ending rules (Windows + Linux)
-├── .gitignore                         # Secrets, dependencies, build output
-│
-├── .opencode/
-│   └── commands/
-│       ├── start-lead.md              # /start-lead — Team Lead's session kickoff
-│       ├── start-veer.md              # /start-veer — Veer's session kickoff
-│       ├── start-lavesh.md            # /start-lavesh — Lavesh's session kickoff
-│       ├── plan-project.md            # /plan-project [constraints] — architecture, contract, tasks, roles
-│       └── integrate.md               # /integrate — review branches, test, merge
-│
+├── models/
+│   ├── v2.1-pre-twist/       # solution.py, features.py, starter_model.json
+│   └── v2.1-adapted/         # adds feed_adapter.py; same model weights
 ├── docs/
-│   ├── PROJECT_SPEC.md                # Problem, users, MVP (generated by /interview)
-│   ├── ARCHITECTURE.md                # Stack, components, data flow, decisions
-│   ├── API_CONTRACT.md                # Endpoints, payloads, schema, shared types
-│   └── TASKS.md                       # Task IDs, owners, priorities, status
-│
-├── workflows/
-│   ├── agent-workflow.md              # How the independent agents collaborate
-│   ├── git-workflow.md                # Branching, commits, syncing, merging
-│   └── integration-checklist.md       # Checks before/after merging and before demo
-│
-└── roles/
-    ├── team-lead.md
-    ├── veer.md
-    └── lavesh.md
+│   ├── PROBLEM.md            # task, targets, scoring, constraints
+│   ├── METHOD.md             # features, forests, validation
+│   ├── EVALUATION.md         # results and honest caveats
+│   ├── POST_TWIST.md         # migrated feed and adapter rules
+│   └── DATA.md               # dataset, licence, schema
+├── scripts/
+│   ├── package.py            # build flat submission ZIPs
+│   └── demo.py               # run both models on synthetic data
+├── tests/                    # no dataset required
+├── dist/                     # prebuilt ZIPs + SHA-256 checksums
+├── requirements.txt
+├── LICENSE
+└── NOTICE
 ```
 
-## How the pieces are used by an agent
+## Quick start
 
-| File | How it is loaded |
-| --- | --- |
-| `AGENTS.md` | Automatically, at the start of every OpenCode session in this repo |
-| `roles/<person>.md` | By the `/start-<person>` command, or by pasting the prompt from the role doc |
-| `docs/*.md` | Read on demand, as instructed by `AGENTS.md` and the role doc |
-| `workflows/*.md` | Referenced when branching, committing, and integrating |
-
-Role commands:
-
-- Team Lead → `/start-lead`
-- Veer → `/start-veer`
-- Lavesh → `/start-lavesh`
-
-Two more commands for the Team Lead:
-
-- `/plan-project [constraints]` — after `/interview`, fills the architecture, API contract, tasks and role docs in one pass, then stops for review. Anything you type after the command is treated as a constraint that overrides its defaults.
-- `/integrate [task-id]` — reviews pushed branches one at a time, tests them, and asks before merging. Without an argument it reviews every unmerged branch.
-
-Run the role command at the start of **every** session. `AGENTS.md` is loaded automatically, but the agent does not know which person's machine it is on until you tell it.
-
-## Starting a hackathon
-
-1. **Create the project repository.** On GitHub, open this repository → **Use this template** → **Create a new repository**. Name it after the hackathon.
-2. **Clone it on the Team Lead machine.**
-
-   ```bash
-   git clone https://github.com/<owner>/<hackathon-repo>.git
-   cd <hackathon-repo>
-   opencode
-   ```
-
-3. **Start the Team Lead session.** Inside OpenCode:
-
-   ```text
-   /start-lead
-   ```
-
-   This is how the agent knows which role it is playing on this machine. Developers use `/start-veer` or `/start-lavesh` instead.
-
-4. **Generate the specification, then the planning documents.**
-
-   ```text
-   /interview
-   ```
-
-   Answer the questions. The skill shows you a draft first; it saves `docs/PROJECT_SPEC.md` only after you say you are satisfied. When it asks whether to start building, answer **no** — the planning step comes next. Then run:
-
-   ```text
-   /plan-project
-   ```
-
-   You can add constraints on the same line. They override the command's defaults:
-
-   ```text
-   /plan-project Use Python for both ends: Streamlit frontend, FastAPI backend.
-   No database, use a JSON file. Deploy on Render. Veer owns frontend, Lavesh owns backend. Max 6 endpoints.
-   ```
-
-   It fills `docs/ARCHITECTURE.md`, `docs/API_CONTRACT.md`, `docs/TASKS.md` and adapts the role docs, then stops for your review. If you prefer to go document by document, the individual prompts are in `workflows/agent-workflow.md`.
-5. **Review the contract and tasks yourself.** They are the interface between two agents that cannot talk to each other.
-6. **Commit and push the setup.**
-
-   ```bash
-   git add .
-   git commit -m "Add project specification, architecture, API contract and tasks"
-   git push origin main
-   ```
-
-   This is the only allowed direct commit to `main`.
-
-7. **Send each developer their repo URL and task IDs.**
-
-## Integrating work
-
-When a developer pushes a branch, run:
-
-```text
-/integrate
-```
-
-The agent lists unmerged branches, reviews one at a time, merges the latest `main` into a temporary review branch, builds and tests it, and asks before merging. On approval it merges, pushes, deletes the branch, and updates `docs/TASKS.md`.
-
-No pull request is required. If two branches are ready, merge one, then merge the updated `main` into the second before testing it.
-
-## Onboarding a developer
-
-One-time machine setup:
-
-- Install Git and OpenCode.
-- Sign in to a model provider in OpenCode (the model is chosen per machine; nothing is hardcoded in this repo).
-- Verify: `git --version` and `opencode --version`.
-
-Then:
+Python 3.11 or newer is enough. Only NumPy is required.
 
 ```bash
-# Linux / macOS
-cd ~/Projects
-git clone https://github.com/<owner>/<hackathon-repo>.git
-cd <hackathon-repo>
-opencode
+git clone https://github.com/Synergy1610/hackmatrix-team99.git
+cd hackmatrix-team99
+
+python3 -m venv .venv
+source .venv/bin/activate          # Windows: .venv\Scripts\activate
+python -m pip install -r requirements.txt
+
+python -m unittest discover -s tests -v
+python scripts/demo.py
+python scripts/package.py --output-dir dist --force
 ```
 
-```powershell
-# Windows PowerShell
-cd $HOME\Projects
-git clone https://github.com/<owner>/<hackathon-repo>.git
-cd <hackathon-repo>
-opencode
+The demo builds a synthetic customer history, runs both models, and prints the
+predictions and shortlist. It does not download or need the source dataset.
+
+To use a model directly:
+
+```python
+import sys
+sys.path.insert(0, "models/v2.1-adapted")
+from solution import decide
+
+result = decide(observation, None)
+predictions = result["action"]["predictions"]
+selected = result["action"]["selected"]
 ```
 
-Start the session with a command:
+`observation` must follow the schema in [docs/DATA.md](docs/DATA.md).
 
-```text
-/start-veer T-003 T-004
-```
+## The twist
 
-or, if the task IDs are not to hand:
+Halfway through the event, the transaction feed changed. The original
+`transactions.rows` table became empty and history arrived as an event feed
+with revisions, retries, per-source unit factors, clock offsets, and partial
+coverage.
 
-```text
-/start-veer
-```
+The adapted model resolves the latest revision per logical row, normalises
+units and clocks, drops rows outside the history window, and deduplicates on
+the original eight fields. It deliberately does not impute missing coverage.
+The pre-twist features were designed for complete histories, so a gappy source
+can still mislead the model.
 
-The command tells the agent which documents to read, which tasks it owns, how to branch, and what to report. No extra prompt is needed. To confirm the commands are available, type `/` in OpenCode and look for `start-veer` and `start-lavesh`.
+Read [docs/POST_TWIST.md](docs/POST_TWIST.md) for the contract, edge cases, and
+the eight released records.
 
-If a developer's tool does not discover the commands, paste the "Session start prompt" block from their role document instead.
+## What this project demonstrates
 
-## Configuring OpenCode
+- Temporal, customer-disjoint validation instead of a leaky random split.
+- A compact model artifact that can be inspected without Python pickles.
+- A clean separation between model weights and input normalisation.
+- An adapter that fails loudly on malformed feeds instead of guessing.
+- Evaluation writing that distinguishes a compatibility check from a score.
 
-- `AGENTS.md` at the repository root is discovered automatically. Do not delete it, and do not run an instruction-file generator (such as `/init`, if your version has it) over it — those generate instructions from existing code and will not contain the team rules.
-- Files in `.opencode/commands/` are discovered automatically and become slash commands.
-- No project-level model, provider, or permission configuration is committed. Each machine keeps its own provider login and model choice.
-- Do not add machine-specific paths or secrets to committed configuration.
+## Limitations
 
-## Reusing the framework
+- **No untouched holdout.** The November group and the practice set were both
+  inspected during development.
+- **No labelled post-twist data.** Post-twist ranking quality is unmeasured.
+- **Coverage gaps are not modelled.** The adapter never invents rows, but the
+  26 features have no explicit coverage flags.
+- **Small sample.** 75 training cases and 51 practice cases support a
+  hackathon result, not a production claim.
+- **Offline ranking.** No uplift or causal effect is estimated.
+- **Not shortlisted.** The hackathon submission did not reach final evaluation.
 
-- Keep this repository as the template. Never add application code to it.
-- For every new hackathon, create a fresh repository from the template so history and docs start clean.
-- After an event, copy back only process improvements (a missing checklist item, a rule that prevented a real bug). Do not copy project-specific content.
+## Attribution and licence
 
-## Conventions
+The models were trained on data derived from the UCI Machine Learning
+Repository's [Online Retail II](https://archive.ics.uci.edu/dataset/502/online+retail+ii)
+dataset by Daqing Chen, licensed under
+[CC BY 4.0](https://creativecommons.org/licenses/by/4.0/).
 
-- Task IDs: `T-001`, `T-002`, … — stable, used in branches and commit messages.
-- Branches: `feature/<task-id>-<short-name>`.
-- Commits: `<TASK-ID>: <summary>`.
-- `main` is the integrated, stable branch. Development happens on feature branches.
-- Do not assume branch protection or mandatory approvals are configured. Follow the workflow by convention, and let the Team Lead verify `main`.
+The dataset and the organiser's processed packet are **not** included in this
+repository. See [NOTICE](NOTICE) and [docs/DATA.md](docs/DATA.md).
 
-## Windows notes
-
-- Commands that differ between shells are shown twice: Bash and PowerShell.
-- `.gitattributes` normalizes line endings so Windows and Linux produce clean diffs.
-- Use forward slashes in committed paths and configuration files.
-- If a diff shows every line changed, check `git config --get core.autocrlf` before committing.
+The source code and fitted model parameters are released under the
+[MIT licence](LICENSE).
