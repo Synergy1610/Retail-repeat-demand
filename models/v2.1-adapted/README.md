@@ -58,8 +58,14 @@ after the twist.
 
 ## Usage
 
-```sh
-python -c "import sys; sys.path.insert(0, 'models/v2.1-adapted'); from solution import decide; print(decide(observation, None))"
+Load the module from the model directory:
+
+```python
+import sys
+sys.path.insert(0, "models/v2.1-adapted")
+from solution import decide
+
+result = decide(observation, None)   # observation follows docs/DATA.md
 ```
 
 Or run the synthetic demo:
